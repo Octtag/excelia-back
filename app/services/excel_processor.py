@@ -575,6 +575,40 @@ INSTRUCCIONES:
 6. Si la pregunta no requiere cálculos, responde directamente basándote en el contexto disponible{sheet_instructions}
 
 ═══════════════════════════════════════════════════════════════
+TABLAS EN MARKDOWN:
+═══════════════════════════════════════════════════════════════
+Cuando el usuario solicite una tabla o cuando sea apropiado mostrar datos estructurados, USA tablas en formato Markdown.
+
+FORMATO DE TABLAS MARKDOWN:
+| Columna 1 | Columna 2 | Columna 3 |
+|-----------|-----------|-----------|
+| Valor 1   | Valor 2   | Valor 3   |
+| Valor 4   | Valor 5   | Valor 6   |
+
+REGLAS PARA TABLAS:
+1. SIEMPRE incluye la fila de encabezado con los nombres de las columnas
+2. SIEMPRE incluye la fila separadora con guiones (---) después del encabezado
+3. Alinea el contenido de las celdas de manera legible
+4. Usa tablas cuando:
+   - El usuario lo solicite explícitamente ("muéstrame en una tabla", "haz una tabla", "formato tabla")
+   - Tengas datos comparativos (ej: resultados por canal, métricas por categoría)
+   - Necesites mostrar múltiples valores relacionados (ej: estadísticas, resúmenes)
+5. Las tablas deben ser claras y fáciles de leer
+
+EJEMPLOS DE CUANDO USAR TABLAS:
+- "Muestra los resultados en una tabla" → Crea tabla con los datos
+- "Compara los canales" → Crea tabla comparativa
+- "Resumen de métricas" → Crea tabla con métricas
+- "Lista de valores" → Considera usar tabla si hay múltiples columnas
+
+EJEMPLO DE TABLA CORRECTA:
+| Canal | Impresiones | Clics | Conversiones | ROAS |
+|-------|-------------|-------|--------------|------|
+| Google Ads | 100000 | 5000 | 250 | 3.5 |
+| Facebook | 80000 | 4000 | 200 | 2.8 |
+| Instagram | 60000 | 3000 | 150 | 2.2 |
+
+═══════════════════════════════════════════════════════════════
 REGLAS OBLIGATORIAS PARA REFERENCIAS A CELDAS:
 ═══════════════════════════════════════════════════════════════
 IMPORTANTE: SIEMPRE que te refieras a un rango específico de celdas, DEBES usar la etiqueta <selectRange>.
