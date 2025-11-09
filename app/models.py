@@ -18,8 +18,18 @@ class TargetCell(BaseModel):
     col: int
 
 
+class ColumnResult(BaseModel):
+    """Resultado para una columna específica"""
+    col: int  # Índice de columna
+    result: str  # Resultado calculado
+    formula: str  # Fórmula de Excel
+
+
 class CommandResponse(BaseModel):
     success: bool
     result: Optional[str] = None
+    formula: Optional[str] = None  # Fórmula de Excel a insertar
+    isGeneralQuery: bool = False  # True si es consulta general/interpretación
     targetCell: Optional[TargetCell] = None
     error: Optional[str] = None
+    columnResults: Optional[List[ColumnResult]] = None  # Resultados por columna

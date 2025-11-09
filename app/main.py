@@ -59,39 +59,85 @@ async def execute_command(request: CommandRequest):
     Returns:
         CommandResponse con el resultado de la operación
     """
+    print("\n" + "="*80)
+    print("🔵 NUEVO REQUEST RECIBIDO")
+    print("="*80)
+    
     try:
+        print(f"📝 Comando: '{request.command}'")
+        print(f"📊 Cantidad de celdas seleccionadas: {len(request.selectedCells) if request.selectedCells else 0}")
+        
         # Validar que hay celdas seleccionadas
         if not request.selectedCells:
+            print("❌ ERROR: No hay celdas seleccionadas")
             return CommandResponse(
                 success=False,
                 error="No se han seleccionado celdas"
             )
 
+        # Mostrar celdas seleccionadas
+        print("\n📋 Celdas seleccionadas:")
+        for i, cell in enumerate(request.selectedCells[:5]):  # Mostrar solo las primeras 5
+            print(f"  {i+1}. Fila {cell.row}, Col {cell.col}: '{cell.value}'")
+        if len(request.selectedCells) > 5:
+            print(f"  ... y {len(request.selectedCells) - 5} más")
+
         # Validar que hay un comando
         if not request.command or not request.command.strip():
+            print("❌ ERROR: Comando vacío")
             return CommandResponse(
                 success=False,
                 error="El comando no puede estar vacío"
             )
 
-        # Procesar el comando
-        result = processor.process_command(request.command, request.selectedCells)
+        print("\n⚙️  Procesando comando...")
+        # Procesar el comando - ahora retorna dict
+        result_dict = processor.process_command(request.command, request.selectedCells)
+
+        print(f"\n✅ Resultado obtenido:")
+        print(f"   - result: '{result_dict.get('result')}'")
+        print(f"   - formula: '{result_dict.get('formula')}'")
+        print(f"   - isGeneralQuery: {result_dict.get('isGeneralQuery')}")
+        print(f"   - columnResults: {result_dict.get('columnResults')}")
+
+        # Verificar si hay columnResults (múltiples columnas)
+        if result_dict.get("columnResults"):
+            print(f"✅ Retornando {len(result_dict['columnResults'])} resultados por columna")
+            print("="*80 + "\n")
+            return CommandResponse(
+                success=True,
+                columnResults=result_dict.get("columnResults"),
+                isGeneralQuery=False
+            )
 
         # Verificar si hay error
-        if result.startswith("ERROR"):
+        result_str = result_dict.get("result", "")
+        if result_str.startswith("ERROR"):
+            print(f"❌ El resultado es un error: {result_str}")
             return CommandResponse(
                 success=False,
-                error=result
+                error=result_str
             )
 
         # Retornar resultado exitoso
+        print("✅ Retornando respuesta exitosa")
+        print("="*80 + "\n")
         return CommandResponse(
             success=True,
-            result=result,
+            result=result_dict.get("result"),
+            formula=result_dict.get("formula"),
+            isGeneralQuery=result_dict.get("isGeneralQuery", False),
             targetCell=None  # El frontend decide dónde poner el resultado
         )
 
     except Exception as e:
+        import traceback
+        print(f"\n❌ EXCEPCIÓN EN MAIN:")
+        print(f"Tipo: {type(e).__name__}")
+        print(f"Mensaje: {str(e)}")
+        print(f"Traceback:")
+        traceback.print_exc()
+        print("="*80 + "\n")
         return CommandResponse(
             success=False,
             error=f"Error procesando comando: {str(e)}"
