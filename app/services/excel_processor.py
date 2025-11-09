@@ -57,8 +57,13 @@ class ExcelProcessor:
 
         return dict(columns)
 
-    def process_command(self, command: str, selected_cells: List[CellData]) -> dict:
+    def process_command(self, command: str, selected_cells: List[CellData], sheet_context: Optional[List[CellData]] = None) -> dict:
         """Procesa un comando sobre las celdas seleccionadas
+
+        Args:
+            command: Comando en lenguaje natural
+            selected_cells: Celdas seleccionadas por el usuario
+            sheet_context: Contexto completo de la hoja (todas las celdas con valor)
 
         Returns:
             dict con keys: result, formula, isGeneralQuery, columnResults
@@ -66,7 +71,8 @@ class ExcelProcessor:
 
         print(f"\n🔄 process_command() llamado")
         print(f"   Comando: '{command}'")
-        print(f"   Celdas: {len(selected_cells)}")
+        print(f"   Celdas seleccionadas: {len(selected_cells)}")
+        print(f"   Contexto de hoja: {len(sheet_context) if sheet_context else 0} celdas")
 
         # Detectar si es consulta general
         is_general = self._is_general_query(command)

@@ -17,8 +17,12 @@ class ConversationMessage(BaseModel):
 class CommandRequest(BaseModel):
     command: str = Field(..., description="Comando en lenguaje natural")
     selectedCells: List[CellData] = Field(..., description="Celdas seleccionadas")
+    sheetContext: Optional[List[CellData]] = Field(
+        default=None,
+        description="Contexto completo del sheet (todas las celdas de la hoja)"
+    )
     conversationHistory: Optional[List[ConversationMessage]] = Field(
-        default=None, 
+        default=None,
         description="Historial de conversación previa (preguntas y respuestas anteriores)"
     )
 

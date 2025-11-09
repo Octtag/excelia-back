@@ -100,8 +100,16 @@ async def execute_command(request: CommandRequest):
             )
 
         print("\n⚙️  Procesando comando...")
+        # Mostrar información del contexto si está disponible
+        if request.sheetContext:
+            print(f"📋 Contexto de hoja: {len(request.sheetContext)} celdas con valor")
+
         # Procesar el comando - ahora retorna dict
-        result_dict = processor.process_command(request.command, request.selectedCells)
+        result_dict = processor.process_command(
+            request.command,
+            request.selectedCells,
+            request.sheetContext
+        )
 
         print(f"\n✅ Resultado obtenido:")
         print(f"   - result: '{result_dict.get('result')}'")
