@@ -3,7 +3,16 @@ from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 import os
 
-from app.models import CommandRequest, CommandResponse, TargetCell
+from app.models import (
+    CommandRequest, 
+    CommandResponse, 
+    TargetCell,
+    AskResponse,
+    AnalysisMetadata,
+    CalculationMetric,
+    AskRequest,
+    CellRange
+)
 from app.services.excel_processor import ExcelProcessor
 
 # Cargar variables de entorno
@@ -97,6 +106,117 @@ async def execute_command(request: CommandRequest):
             error=f"Error procesando comando: {str(e)}"
         )
 
+@app.post("/api/excel/ask", response_model=CommandResponse)
+async def ask_question(request: AskRequest):
+    """
+    Responde una pregunta del usuario sobre las celdas seleccionadas usando un agente ReAct.
+    
+    El agente puede:
+    - Analizar los datos de las celdas seleccionadas
+    - Usar herramientas para realizar cálculos y análisis estadísticos
+    - Proporcionar respuestas en lenguaje natural
+    - Usar historial de conversación previo
+    - Sugerir cálculos después de preguntas abiertas
+    
+    Args:
+        request: CommandRequest con la pregunta, celdas seleccionadas y historial de conversación
+    
+    Returns:
+        CommandResponse con la respuesta del agente y sugerencias de cálculos si aplica
+    """
+    try:
+        # Validar que hay una pregunta
+        if not request.command or not request.command.strip():
+            return CommandResponse(
+                success=False,
+                error="La pregunta no puede estar vacía"
+            )
+        
+        # Preparar celdas seleccionadas (puede ser None o lista vacía)
+        selected_cells = request.selectedCells or []
+        
+        # Preparar historial de conversación
+        conversation_history = request.conversationHistory or []
+        
+        # Preparar contexto del sheet
+        sheet_context = request.sheetContext or []
+        
+        # Procesar la pregunta con el agente ReAct (incluyendo historial y contexto del sheet)
+        result = processor.answer_question(
+            question=request.command,
+            selected_cells=selected_cells,
+            sheet_context=sheet_context,
+            conversation_history=conversation_history
+        )
+        
+        # Verificar si hay error
+        if isinstance(result, str) and result.startswith("ERROR"):
+            return CommandResponse(
+                success=False,
+                error=result
+            )
+        
+        # Si result es un diccionario, extraer información estructurada
+        if isinstance(result, dict):
+            answer = result.get("answer", "")
+            suggested_calculations = result.get("suggested_calculations")
+            tools_used = result.get("tools_used", [])
+            calculations = result.get("calculations", [])
+            cells_analyzed = result.get("cells_analyzed", len(selected_cells))
+            numeric_values = result.get("numeric_values", 0)
+            text_values = result.get("text_values", 0)
+            selectable_ranges = result.get("selectable_ranges", [])
+        else:
+            answer = result
+            suggested_calculations = None
+            tools_used = []
+            calculations = []
+            cells_analyzed = len(selected_cells)
+            numeric_values = 0
+            text_values = 0
+            selectable_ranges = []
+        
+        # Construir metadatos del análisis
+        calculation_metrics = [
+            CalculationMetric(
+                name=calc.get("name", ""),
+                value=calc.get("value"),
+                tool=calc.get("tool", "")
+            )
+            for calc in calculations
+        ]
+        
+        metadata = AnalysisMetadata(
+            cellsAnalyzed=cells_analyzed,
+            numericValues=numeric_values,
+            textValues=text_values,
+            toolsUsed=tools_used,
+            calculations=calculation_metrics
+        )
+        
+        # Construir respuesta estructurada
+        structured_result = AskResponse(
+            answer=answer,
+            summary=None,  # Se puede generar un resumen si es necesario
+            metadata=metadata,
+            suggestedCalculations=suggested_calculations,
+            selectableRanges=selectable_ranges if selectable_ranges else None
+        )
+        
+        # Retornar respuesta exitosa con estructura
+        return CommandResponse(
+            success=True,
+            result=answer,  # Mantener para compatibilidad
+            structuredResult=structured_result,
+            targetCell=None,  # No se modifica ninguna celda, solo se responde
+            suggestedCalculations=suggested_calculations  # Mantener para compatibilidad
+        )
+    
+    except Exception as e:
+        return CommandResponse(
+            success=False,
+            error=f"Error procesando pregunta: {str(e)}"
+        )
 
 if __name__ == "__main__":
     import uvicorn
