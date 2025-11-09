@@ -59,9 +59,14 @@ async def execute_command(request: CommandRequest):
     Returns:
         CommandResponse con el resultado de la operación
     """
+    print("\n" + "="*80)
+    print("🔵 NUEVO REQUEST RECIBIDO")
+    print("="*80)
+    
     try:
         # Validar que hay celdas seleccionadas
         if not request.selectedCells:
+            print("❌ ERROR: No hay celdas seleccionadas")
             return CommandResponse(
                 success=False,
                 error="No se han seleccionado celdas"
@@ -69,22 +74,38 @@ async def execute_command(request: CommandRequest):
 
         # Validar que hay un comando
         if not request.command or not request.command.strip():
+            print("❌ ERROR: Comando vacío")
             return CommandResponse(
                 success=False,
                 error="El comando no puede estar vacío"
             )
 
+        print(f"📝 Comando: '{request.command}'")
+        print(f"📊 Celdas seleccionadas: {len(request.selectedCells)}")
+        
+        # Mostrar valores de las celdas
+        print("📋 Valores:")
+        for i, cell in enumerate(request.selectedCells[:5]):  # Mostrar primeras 5
+            print(f"   [{i+1}] Fila {cell.row}, Col {cell.col}: '{cell.value}'")
+        if len(request.selectedCells) > 5:
+            print(f"   ... y {len(request.selectedCells) - 5} más")
+
         # Procesar el comando
+        print("\n⚙️  Procesando comando...")
         result = processor.process_command(request.command, request.selectedCells)
 
         # Verificar si hay error
         if result.startswith("ERROR"):
+            print(f"❌ ERROR en procesamiento: {result}")
             return CommandResponse(
                 success=False,
                 error=result
             )
 
         # Retornar resultado exitoso
+        print(f"✅ RESULTADO: {result}")
+        print("="*80 + "\n")
+        
         return CommandResponse(
             success=True,
             result=result,
@@ -92,6 +113,8 @@ async def execute_command(request: CommandRequest):
         )
 
     except Exception as e:
+        print(f"❌ EXCEPCIÓN: {str(e)}")
+        print("="*80 + "\n")
         return CommandResponse(
             success=False,
             error=f"Error procesando comando: {str(e)}"
